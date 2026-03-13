@@ -6,7 +6,7 @@
 
 ## Runtime Contract
 - Use Bun only.
-- Run app commands from `image-tagger-2026/` unless the task targets root-level docs or scripts.
+- Run app commands from the app package directory unless the task targets root-level docs or scripts.
 
 ## Unified Test Workflow
 
