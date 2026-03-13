@@ -1,87 +1,96 @@
-## Target Stack Install Anatomy (Official-first Path)
+## Target Stack Scaffold Workflow (Skill-first Path)
 
 ### Summary
-Your repo already has `Bun + Next.js + shadcn/ui` initialized, so the next step is **integration layering**: data, auth, caching/fetching, file/media, and monitoring.  
-Given `docs/stack.md`, the most reliable path is to prefer stacks with official installable skills where available, and use docs-first installs where not.
+This plan runs a strict, skill-first scaffold workflow with one required user checkpoint in shadcn Create UI.
 
-### Install Tree (Anatomy)
+### Workflow (Execution Order)
+0. Run trust bootstrap first:
+   - `bash scripts/codex-trust.sh`
+   - Prompt user to restart Codex before continuing.
+1. Install all available skills:
+   - `bunx skills experimental_install -y`
+2. Open browser to shadcn Create:
+   - `https://ui.shadcn.com/create`
+   - Complete style check.
+   - Instruct user to click `Create Project` and paste the generated init command (example: `bunx --bun shadcn@latest init --preset a1EVC2i3 --base base --template next`).
+3. Use skill `shadcn` to create the project from the command pasted in step 2.
+4. Provision Postgres and set `DATABASE_URL` (choose one):
+   - Use skill `claimable-postgres` (fastest unblock path), or
+   - run `bunx neon-new -y` directly (Neon path).
+5. Set up ORM based on user choice:
+   - skill `prisma-database-setup`, or
+   - skill `neon-drizzle`.
+6. Set up auth based on user choice:
+   - skill `create-auth-skill`, or
+   - skill `clerk-setup`.
+7. Set up media based on user choice:
+   - skill `uploadthing-nextjs`, or
+   - docs path `https://next.cloudinary.dev/installation`.
+8. Use skill `sentry-nextjs-sdk` to set up Sentry monitoring.
+
+### Secret Contract (By Branch)
+- Required baseline:
+  - `DATABASE_URL` (from step 4).
+- Auth branch:
+  - Better Auth path:
+    - `BETTER_AUTH_SECRET`
+    - `BETTER_AUTH_URL`
+    - `NEXT_PUBLIC_BETTER_AUTH_URL`
+  - Clerk path:
+    - `CLERK_SECRET_KEY`
+    - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- Media branch:
+  - UploadThing path:
+    - `UPLOADTHING_TOKEN` (or provider-issued UploadThing server token contract used by the selected skill version).
+  - Cloudinary path:
+    - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
+    - `CLOUDINARY_API_KEY`
+    - `CLOUDINARY_API_SECRET`
+- Sentry branch:
+  - Required ingestion:
+    - `SENTRY_DSN`
+  - Optional release/source-map workflow:
+    - `SENTRY_AUTH_TOKEN`
+    - `SENTRY_ORG`
+    - `SENTRY_PROJECT`
+- Storage recommendation:
+  - Keep committed examples in `.env.example`.
+  - Keep real values in local `.env.local` (never commit secrets).
+
+### Scaffold Anatomy Graph
 ```text
-Project Bootstrap
-├─ Runtime + App Shell (already done)
-│  ├─ Bun
-│  └─ Next.js + TypeScript + shadcn/ui
+Scaffold Start
+├─ 0) Trust Bootstrap
+│  └─ bash scripts/codex-trust.sh
+│     └─ Restart Codex (required checkpoint)
 │
-├─ AI/Skill Layer (optional but recommended early)
-│  ├─ shadcn skill         -> bunx skills add shadcn/ui
-│  ├─ prisma skill         -> bunx skills add prisma/skills
-│  ├─ neon skill           -> bunx skills add neondatabase/agent-skills
-│  ├─ auth skill (pick one)-> bunx skills add clerk/skills
-│  │                         or bunx skills add better-auth/skills
-│  └─ sentry AI skill      -> bunx @sentry/dotagents add getsentry/sentry-agent-skills --name sentry-setup-ai-monitoring
+├─ 1) Skill Bootstrap
+│  └─ bunx skills experimental_install -y
 │
-├─ Data Layer (pick one ORM branch)
-│  ├─ Prisma branch (recommended for official skill support)
-│  │  ├─ bun add prisma @prisma/client
-│  │  ├─ bunx prisma init
-│  │  ├─ configure DATABASE_URL (Neon/Supabase)
-│  │  ├─ bunx prisma migrate dev
-│  │  └─ bunx prisma generate
-│  └─ Drizzle branch (docs-first)
-│     ├─ bun add drizzle-orm pg
-│     ├─ bun add -D drizzle-kit @types/pg
-│     └─ create drizzle config + migrations
+├─ 2) UI Preset Selection (human-in-the-loop)
+│  └─ Open https://ui.shadcn.com/create
+│     └─ User clicks "Create Project" and pastes init command
 │
-├─ Database Host (pick one)
-│  ├─ Neon (recommended in this stack doc)
-│  │  └─ create DB + set DATABASE_URL
-│  └─ Supabase
-│     └─ create project + set DATABASE_URL / keys
+├─ 3) Project Creation
+│  └─ Use skill: shadcn (execute pasted command)
 │
-├─ Server State + Mutations
-│  ├─ bun add @tanstack/react-query
-│  └─ pair with Next.js Server Actions for writes
+├─ 4) Database Provisioning
+│  └─ Set DATABASE_URL (choose one)
+│     ├─ claimable-postgres
+│     └─ bunx neon-new -y
 │
-├─ Auth (pick one, do not run both)
-│  ├─ Clerk       -> bun add @clerk/nextjs
-│  └─ Better Auth -> bun add better-auth && bunx @better-auth/cli generate
+├─ 5) ORM Setup (choose one)
+│  ├─ prisma-database-setup
+│  └─ neon-drizzle
 │
-├─ File/Media (optional feature branch)
-│  ├─ UploadThing     -> bun add uploadthing @uploadthing/react
-│  └─ Next Cloudinary -> bun add next-cloudinary
+├─ 6) Auth Setup (choose one)
+│  ├─ create-auth-skill
+│  └─ clerk-setup
 │
-└─ Observability
-   └─ bunx @sentry/wizard@latest -i nextjs
+├─ 7) Media Setup (choose one)
+│  ├─ uploadthing-nextjs
+│  └─ next.cloudinary.dev/installation
+│
+└─ 8) Monitoring Setup
+   └─ sentry-nextjs-sdk
 ```
-
-### Key Interface/Additions
-- Add environment contracts:
-  - `DATABASE_URL`
-  - Auth keys (`CLERK_*` or Better Auth secrets)
-  - Storage keys (UploadThing/Cloudinary)
-  - `SENTRY_AUTH_TOKEN` (if uploading source maps)
-- Add app infrastructure surfaces:
-  - DB client singleton (`lib/db`)
-  - Query client provider (React Query)
-  - Auth middleware/provider (one provider only)
-  - Error/trace monitoring bootstrap (Sentry)
-
-### Test Plan
-1. Install validation:
-   - `bun install`
-   - `bun run typecheck`
-   - `bun run lint`
-2. Runtime validation:
-   - `bun run dev`
-   - Confirm `/dashboard` loads without 500s.
-3. Data path validation:
-   - Run one read + one write through Server Action + Query invalidation.
-4. Auth validation:
-   - Sign-in flow works for selected provider.
-5. Monitoring validation:
-   - Trigger a controlled error and verify it arrives in Sentry.
-
-### Assumptions (Defaults Chosen)
-- Use **Prisma + Neon + Better Auth + TanStack Query + Sentry** as the default “official-skill-first” track.
-- Treat **Clerk** as an alternative auth branch (not combined with Better Auth).
-- Keep **Drizzle**, **UploadThing**, and **Cloudinary** as optional branches unless product requirements demand them immediately.
-- Because Next+shadcn is already present, do not re-run scaffold/init; continue from integration stage.
