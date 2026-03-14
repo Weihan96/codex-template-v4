@@ -34,7 +34,7 @@ This plan runs a strict, skill-first scaffold workflow with one required user ch
    - skill `create-auth-skill`, or
    - follow `docs/clerk-setup-llm.txt` for Clerk Next.js App Router setup.
 8. Set up media based on user choice:
-   - skill `uploadthing-nextjs`, or
+   - skill `setup-uploadthing-nextjs-app-router`, or
    - docs path `https://next.cloudinary.dev/installation`.
 9. Use skill `sentry-nextjs-sdk` to set up Sentry monitoring.
 

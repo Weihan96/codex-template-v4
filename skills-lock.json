@@ -6,11 +6,6 @@
       "sourceType": "github",
       "computedHash": "24463fa771004702128f4d6d1cece312699095368a280960ee0d4a2f6b631338"
     },
-    "clerk-setup": {
-      "source": "clerk/skills",
-      "sourceType": "github",
-      "computedHash": "375d41a8b8e7c5a51e748cd1042379bd01cd1369ce774804d62527e3a9a7e2d8"
-    },
     "create-auth-skill": {
       "source": "better-auth/skills",
       "sourceType": "github",
@@ -35,11 +30,6 @@
       "source": "shadcn/ui",
       "sourceType": "github",
       "computedHash": "1ec42c9b918b315d8e5c6c856b78c3c4725fc93dea30b9b7e9975c69848fcce6"
-    },
-    "uploadthing-nextjs": {
-      "source": "flohhhhh/skills",
-      "sourceType": "github",
-      "computedHash": "1a9fc2ecbe644fa1dce141cee80977822eff99affea569a729a23eeb2463a43d"
     }
   }
 }
