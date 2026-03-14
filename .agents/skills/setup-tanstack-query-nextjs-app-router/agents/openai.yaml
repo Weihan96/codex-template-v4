@@ -1,0 +1,4 @@
+interface:
+  display_name: "TanStack Query App Router SSR"
+  short_description: "Set up TanStack Query SSR in Next.js App Router"
+  default_prompt: "Use $setup-tanstack-query-nextjs-app-router to set up TanStack Query in a Next.js App Router project with advanced SSR patterns."

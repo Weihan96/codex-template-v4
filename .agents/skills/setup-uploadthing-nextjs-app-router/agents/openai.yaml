@@ -1,0 +1,4 @@
+interface:
+  display_name: "UploadThing App Router"
+  short_description: "Set up UploadThing in Next.js App Router"
+  default_prompt: "Use $setup-uploadthing-nextjs-app-router to set up UploadThing in a Next.js App Router project."
