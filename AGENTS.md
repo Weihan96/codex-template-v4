@@ -7,6 +7,7 @@
 ## Runtime Contract
 - Use Bun only.
 - Run app commands from `image-tagger-2026/` unless the task targets root-level docs or scripts.
+- Prefer TanStack Query plus Server Actions for client-server data communication.
 
 ## Unified Test Workflow
 
