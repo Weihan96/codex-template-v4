@@ -32,7 +32,7 @@ This plan runs a strict, skill-first scaffold workflow with one required user ch
    - skill `neon-drizzle`.
 7. Set up auth based on user choice:
    - skill `create-auth-skill`, or
-   - skill `clerk-setup`.
+   - follow `docs/clerk-setup-llm.txt` for Clerk Next.js App Router setup.
 8. Set up media based on user choice:
    - skill `uploadthing-nextjs`, or
    - docs path `https://next.cloudinary.dev/installation`.
@@ -103,7 +103,7 @@ Scaffold Start
 │
 ├─ 7) Auth Setup (choose one)
 │  ├─ create-auth-skill
-│  └─ clerk-setup
+│  └─ docs/clerk-setup-llm.txt
 │
 ├─ 8) Media Setup (choose one)
 │  ├─ uploadthing-nextjs
