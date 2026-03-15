@@ -4,6 +4,10 @@
 - Define the mandatory testing workflow for AI agents in this repository.
 - Scope: repository root and all tracked project files.
 
+## Scaffold Pointer
+- For scaffold-specific workflow, provider-specific setup rules, and human-checkpoint sequencing, use `docs/scaffold-plan.md`.
+- Keep this file focused on cross-project gate and verification contracts.
+
 ## Runtime Contract
 - Use Bun only.
 - Run app commands from the app package directory unless the task targets root-level docs or scripts.
@@ -12,6 +16,7 @@
 
 ```text
 Gate 0: Decision Lock (scaffold only)
+  -> Preflight: Environment Preconditions
   -> Gate 1: Static Quality
   -> Gate 2: Browser E2E (source of truth)
   -> Gate 3: Integration Contracts
@@ -21,7 +26,7 @@ Gate 0: Decision Lock (scaffold only)
 - Docs-only changes: no gates required.
 - App code or config changes: Gate 1 + Gate 2.
 - Boundary changes: Gate 1 + Gate 2 + Gate 3.
-- Scaffold milestone or pre-merge: Gate 1 + Gate 2 + Gate 3 via `bun run verify:all`.
+- Scaffold milestone or pre-merge: follow `docs/scaffold-plan.md`, then run `bun run verify:preflight`, then Gate 1 + Gate 2 + Gate 3 via `bun run verify:all`.
 
 ## Boundary Change Definition
 Boundary changes include:
@@ -30,11 +35,6 @@ Boundary changes include:
 - DB schema, migration, model, or relation changes.
 - Auth provider, session, sign-in flow, or protected-route behavior changes.
 - Monitoring SDK, initialization, config, or transport changes.
-
-## Gate 0: Decision Lock (Scaffold Only)
-- Finalize stack and structure decision gates before scaffold expansion.
-- Record each decision in `docs/adr/`.
-- Do not continue scaffold implementation with unresolved gates.
 
 ## Gate 1: Static Quality
 - Run `bun install` when dependencies or lockfile change.
@@ -56,17 +56,20 @@ Boundary changes include:
 ## Integration Preconditions
 - Gate 3 requires valid integration env vars for the selected stack path.
 - If required env vars are missing, mark Gate 3 as `BLOCKED` with exact missing variable names and stop.
+- If a required external human checkpoint is incomplete, mark `BLOCKED (HUMAN_CHECKPOINT_REQUIRED)` and stop.
 - Do not mark Gate 3 as passed when prerequisites are missing.
 
 ## Command Contract
 - Maintain these scripts in the app package:
+- `verify:preflight` = integration env + human-checkpoint preconditions.
 - `verify:static` = typecheck + lint.
 - `verify:e2e` = full Playwright suite.
 - `verify:integration` = selected integration contracts.
 - `verify:all` = static + e2e + integration.
+- Run `bun run verify:preflight` before `verify:e2e`, `verify:integration`, and `verify:all`.
+- `verify:all` must short-circuit when preflight fails.
 - If any verify script is missing, add or update scripts first, then run gates.
 - Do not replace required verification with ad-hoc commands in final verification unless script creation is blocked.
-- Use `bun run verify:all` for scaffold milestones and pre-merge verification.
 - Use `bun run verify:static` and targeted `verify:e2e` while iterating locally.
 
 ## Verification Evidence Contract
