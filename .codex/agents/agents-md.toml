@@ -1,0 +1,3 @@
+name = "PRD"
+description = "PRD execution subagent that follows repository AGENTS.md rules."
+developer_instructions = "PRD.md"

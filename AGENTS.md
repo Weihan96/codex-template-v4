@@ -1,81 +1,132 @@
 # AGENTS.md
 
-## 1) Purpose
-This file defines the operating contract for creating and maintaining PRD documents in this repository.
+## 1) Purpose and Inputs
 
-This file is PRD-only. It does not define coding, test execution, CI, or release workflow policy.
+This file defines implementation rules for AI agents coding from PRDs.
 
-## 2) Scope
-Applies to creation and updates of:
+Implementation input:
+
+- `tasks.md` is the only execution-driving input.
+
+Reference-only context (read, do not treat as direct task queue):
+
 - `master-plan.md`
-- `implementation-plan.md`
-- `design-guideline.md`
 - `user-journey.md`
-- `tasks.md`
+- `design-guideline.md`
+- `implementation-plan.md`
 
-Unless the user explicitly exempts a document, keep the full PRD set consistent.
+`PRD-rules.md` remains the canonical standard for PRD structure.
 
-## 3) Canonical Standard
-- `PRD-rules.md` is the canonical PRD structure and quality standard.
-- `AGENTS.md` defines authoring behavior and enforcement expectations for PRD work.
-- If `AGENTS.md` and `PRD-rules.md` diverge, follow `PRD-rules.md` and update `AGENTS.md` to match.
+## 2) Scope and Traceability Rules
 
-## 4) PRD ID Legend
-Use document-coded IDs consistently:
-- `MP-###` for `master-plan.md`
-- `IP-###` for `implementation-plan.md`
-- `DG-###` for `design-guideline.md`
-- `UJ-###` for `user-journey.md`
-- `TS-###` for `tasks.md`
+- Implement only `TS-###` entries from `tasks.md`.
+- Every change must map to `TS-###` and its `source_links` (`MP-###`, `UJ-###`, optional `DG-###`, `IP-###`).
+- Preserve documented constraints and decisions from referenced source entries.
+- If PRD conflict is ambiguous and cannot be auto-resolved, escalate once to the user before implementation.
 
-## 5) Authoring Order
-Default update order:
-1. `master-plan.md`
-2. `user-journey.md`
-3. `design-guideline.md`
-4. `implementation-plan.md`
-5. `tasks.md`
+## 3) Coding MUST / MUST NOT
 
-`tasks.md` may refine execution details, but must not contradict upstream intent.
+### MUST
 
-## 6) PRD MUST
-- Follow required vs optional section rules from `PRD-rules.md`.
-- Keep section limits and readability constraints from `PRD-rules.md`.
-- Keep acceptance criteria measurable and testable.
-- Keep `source_links` valid for each `TS-###` entry.
-- Keep structured notes clear and scannable (tables, bullets, or concise prose), chosen by clarity.
-- In `tasks.md`, avoid embedded diagrams as primary content; diagram links are allowed.
+- Convert each task goal and acceptance criteria into concrete behavior.
+- Keep changes minimal, explicit, and reversible.
+- Add or update tests for user-visible and contract-level changes.
+- Keep fixing bugs and rerunning required tests until they pass or are explicitly `BLOCKED`.
 
-## 7) PRD MUST NOT
-- Do not create contradictory statements across PRD docs.
-- Do not duplicate requirements without clear cross-reference to source entries.
-- Do not leave `TS-###` entries without upstream `source_links`.
-- Do not proceed with unresolved PRD conflicts.
-- Do not introduce ad-hoc PRD formats that bypass `PRD-rules.md`.
+### MUST NOT
 
-## 8) Conflict Handling
-Target state is zero conflicts across PRD docs.
+- Do not implement scope not represented in `tasks.md`.
+- Do not claim completion while acceptance criteria or required tests are failing.
+- Do not silently change API/data/auth/monitoring behavior without PRD traceability.
+- Do not remove failing tests to force green status unless requirements changed.
 
-During drafting or updates:
-- Detect contradictions immediately.
-- Auto-resolve by aligning downstream docs to canonical upstream sources.
+## 4) Testing Cadence
 
-If auto-resolution is ambiguous, ask the user and provide:
-- exact conflicting statements
-- resolution options
-- impact and risk of each option
+- Docs-only exception: if a change only modifies documentation files, code checks and test-pass requirements are not required.
+- Task loop (progressive): for each `TS-###` update, run task smoke tests + `verify:static`.
+- System block checkpoint (boundary-based): run targeted `verify:e2e` and `verify:integration` when a system block completes and boundaries changed.
+- Periodic full check: run `verify:all` pre-merge and nightly.
+- Keep full run-by-run diary local at `.tmp/test-diary.jsonl` (gitignored).
 
-## 9) PRD Evidence Contract
-When any PRD file changes, report:
-- required vs optional section compliance
-- Doc+ID and `source_links` consistency
-- acceptance criteria measurability in `tasks.md`
-- conflict status (auto-resolved or user-escalated)
+Boundary-based checkpoint triggers:
 
-## 10) PRD Definition of Done
-PRD work is complete only when:
-- changed docs comply with `PRD-rules.md`
-- no unresolved cross-doc conflicts remain
-- Doc+ID references and `source_links` are coherent across PRD docs
-- acceptance criteria are measurable and reviewable
-- PRD evidence is included in the final report
+- API route or request/response contract changes
+- DB schema/model/relation changes
+- auth/session/protected-route behavior changes
+- monitoring initialization/event/transport changes
+- shared cross-service interface changes
+
+If required checks cannot run, mark `BLOCKED` with exact missing prerequisites.
+
+## 5) Smoke Test Contract (tasks.md-Aligned)
+
+- Create smoke tests according to `tasks.md` for each implemented `TS-###`.
+- Map smoke tests to acceptance criteria and `source_links`.
+- Execute smoke tests before marking a task complete.
+- Cover at least one happy path and one failure path per changed task.
+- If `tasks.md` smoke examples are missing or ambiguous, update PRD docs before sign-off.
+- Keep `tasks.md` Evidence concise; link to failure playbook entries when created.
+
+## 6) Test Result Diary (Prevent Repeat Failures)
+
+Maintain a structured test diary for each run to prevent repeated failed solutions.
+Storage path (default): `.tmp/test-diary.jsonl`.
+Commit policy:
+
+- Do not commit raw diary runs by default.
+- Promote high-value stuck cases into committed knowledge at `docs/testing/failure-playbook.md`.
+
+Schema (one record per test run attempt):
+
+
+| Field               | Required | Description                                        |
+| ------------------- | -------- | -------------------------------------------------- |
+| `run_id`            | yes      | Unique run identifier.                             |
+| `timestamp`         | yes      | ISO datetime of the run.                           |
+| `task_id`           | yes      | `TS-###` under test.                               |
+| `source_links`      | yes      | Linked source IDs for this task.                   |
+| `test_scope`        | yes      | `smoke`, `static`, `e2e`, `integration`, or `all`. |
+| `command`           | yes      | Exact command executed.                            |
+| `status`            | yes      | `PASS`, `FAIL`, or `BLOCKED`.                      |
+| `failure_signature` | no       | Stable short identifier for the failure mode.      |
+| `root_cause`        | no       | Short cause summary.                               |
+| `fix_method`        | no       | Short method used to fix.                          |
+| `rerun_result`      | no       | Result after fix attempt.                          |
+| `blind_spot`        | no       | Remaining gap/risk not fully covered.              |
+
+
+Anti-repeat rule:
+
+- Before applying a new fix for a failing test, check prior diary entries with the same `failure_signature`.
+- Do not repeat the same fix method unchanged after a prior `FAIL`; change approach and record the new method.
+
+Promotion trigger from diary to committed playbook:
+
+- repeated same `failure_signature` for `>= 3` attempts, or
+- task/check remains `BLOCKED` for `> 1 day`, or
+- rollback risk or high-impact production risk is involved.
+
+## 7) Reporting and Definition of Done
+
+For each completed `TS-###`, report:
+
+- task ID and `source_links`
+- behavior change summary
+- exact commands, exit codes, and pass/fail results
+- smoke coverage summary against `tasks.md`
+- potential blind spots/test gaps and reason
+- test diary entry summary (latest failure -> fix -> rerun outcome, if applicable)
+- `playbook_link` when promotion trigger is met
+
+Skill reporting rule:
+
+- If any skill was used for a task, include skill receipt line(s): `<skill> -> used -> reason`.
+- If no skill was used, do not mention skills.
+
+Done means:
+
+- acceptance criteria satisfied
+- required tests passed, correctly marked `BLOCKED`, or not required for docs-only changes
+- no unresolved PRD conflict remains
+- diary and final report are consistent with executed results
+
