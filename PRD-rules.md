@@ -1,226 +1,165 @@
-# PRD Rules (Project Requirement Docs)
+# PRD Rules (Design-First v5)
 
-## 1) Purpose and Scope
-This file defines the required structure for project requirement documents so they are readable for humans and reliable for AI coding agents.
+## A. Purpose and PRD File Set
+This rulebook defines how PRD files are written, reviewed, and linked through a design-first workflow.
 
-Document set covered:
-- `master-plan.md`
-- `implementation-plan.md`
-- `design-guideline.md`
-- `user-journey.md`
-- `tasks.md`
+PRD files:
+- Core files:
+  - `master-plan.md`
+  - `implementation-plan.md`
+  - `design-guideline.md`
+  - `user-journey.md`
+  - `tasks.md`
 
-Use this rulebook as the default contract unless a project-specific override is explicitly documented.
+```mermaid
+flowchart LR
+  A["Step 1: Master Plan Baseline"] --> G1["Gate 1: Human Approval + Stack Freeze"]
+  G1 --> B["Step 2: Downstream PRDs (IP / DG / UJ)"]
+  B --> G2["Gate 2: Reconciliation"]
+  G2 --> C["Step 3: tasks.md Generation"]
+```
+Lifecycle summary: write master plan first, freeze baseline at Gate 1, draft downstream docs, reconcile at Gate 2, then generate tasks.
 
-## 2) Doc+ID Standard (Canonical)
-Use document-coded IDs only.
+## B. Sequence Reference (Text Fallback)
+Use this fallback sequence when a textual checklist is preferred:
+1. Master plan baseline.
+2. Gate 1 human approval and stack freeze.
+3. Downstream drafting (`implementation-plan.md`, `design-guideline.md`, `user-journey.md`).
+4. Gate 2 reconciliation.
+5. `tasks.md` generation.
 
-| Doc | Code | ID Pattern | Example |
-|---|---|---|---|
-| `master-plan.md` | `MP` | `MP-###` | `MP-001` |
-| `implementation-plan.md` | `IP` | `IP-###` | `IP-001` |
-| `design-guideline.md` | `DG` | `DG-###` | `DG-001` |
-| `user-journey.md` | `UJ` | `UJ-###` | `UJ-001` |
-| `tasks.md` | `TS` | `TS-###` | `TS-001` |
+## C. Master Plan Baseline
+`master-plan.md` must be complete before Gate 1. It acts as the catalog baseline for scope, stacks, page model, and high-level design intent.
 
-Rules:
-1. Numbering is per document sequence (`001`, `002`, `003`, ...).
-2. Type meaning comes from field context, not ID prefix.
-3. Hard switch policy: legacy type-prefixed IDs are not allowed in active policy/docs.
-4. Task-scoped test records may use derivatives like `TS-012.T1`.
+Recommended section titles for `master-plan.md`:
+1. Purpose and Users
+2. Scope and Non-goals
+3. Applicable Stacks Baseline
+4. UI Components and Design Patterns
+5. Page Inventory and Relationships
+6. High-level Design Intent
+7. Risks, Decisions, and Stack Additions
+   - Each stack addition item should include:
+     - design driver
+     - proposed stack addition
+     - alternatives considered
+     - expected impact (`performance`, `security`, `operations`, `maintenance`)
+     - decision status (`approved`, `deferred`, `rejected`)
+     - rationale
 
-## 3) Global Writing Rules (All Docs)
-1. Use concise, direct language and concrete terms.
-2. Keep deterministic section headers for reliable scanning.
-3. Limit `master-plan.md`, `implementation-plan.md`, `design-guideline.md`, and `user-journey.md` to 5 sections each.
-4. Target 80-140 words per section (hard cap 200).
-5. Use one idea per paragraph.
-6. Use tables, bullets, and concise prose as equal options; choose the clearest format by section.
-7. For the first 4 docs, visuals are recommended when they improve clarity; add a 2-4 line text summary under each visual.
-8. For `tasks.md`, avoid embedded diagrams as primary content; use checklists, bullets, tables, and links to diagrams when needed.
-9. Define terms once and reuse them consistently.
-10. Explicitly list non-goals.
-11. Do not duplicate requirements across docs; cross-link to the source entry.
+## D. Gate Logic Diagram
+```mermaid
+flowchart TB
+  S0["Master Plan Baseline Ready"] --> G1{"Gate 1 Approved?"}
+  G1 -->|No| R1["Revise Master Plan"]
+  R1 --> G1
+  G1 -->|Yes| F["Stack Baseline Frozen"]
+  F --> W["Draft IP / DG / UJ"]
+  W --> G2{"Gate 2 Reconciled?"}
+  G2 -->|No| R2["Resolve Contradictions + Tradeoffs"]
+  R2 --> G2
+  G2 -->|Yes| T["Generate tasks.md"]
+  F --> L{"Late Stack Addition Needed?"}
+  L -->|Yes| O["Re-open Gate 1 (Human)"]
+  O --> F
+  L -->|No| W
+```
+Gate summary: after Gate 1, stack changes are frozen by default; late stack additions require explicit Gate 1 re-open.
 
-## 4) Source-of-Truth and Conflict Handling
-Source-of-truth mapping:
-- `master-plan.md`: product intent, boundaries, success criteria.
-- `implementation-plan.md`: technical approach, sequencing, rollout safety.
-- `design-guideline.md`: UX/UI behavior rules.
-- `user-journey.md`: flow logic, friction points, recovery behavior.
-- `tasks.md`: executable work units, tests, acceptance evidence.
+## E. Downstream Document Contracts
+Use clear section titles in downstream docs so authors and reviewers can scan quickly.
 
-Conflict prevention rules:
-- Target state is zero conflicts across PRD docs.
-- Detect and resolve contradictions during drafting/updates before finalizing docs.
-- Resolve by aligning downstream docs to the canonical upstream source for that topic.
-- Do not proceed to implementation while unresolved PRD conflicts remain.
+| File | Suggested Section Titles | Focus |
+|---|---|---|
+| `implementation-plan.md` | Architecture Boundaries; API and Schema Direction; Integration and Verification | Technical execution within frozen stacks |
+| `design-guideline.md` | UI by Page Group; Component Purpose Map; Wireframe Layout Sketches; State Handling | Page-level UI behavior and structure |
+| `user-journey.md` | Cross-page Flows; Role Handoffs; Failure and Recovery Paths | User movement and system response across pages |
 
-Escalation rule:
-- If auto-resolution is ambiguous, ask the user and provide:
-  - exact conflicting statements
-  - resolution options
-  - impact/risk of each option
+## F. Reconciliation (Gate 2)
+Gate 2 validates that implementation, design, and journey docs are consistent before task generation.
 
-Fallback order (only when auto-resolution is possible):
-1. `master-plan.md`
-2. `user-journey.md`
-3. `design-guideline.md`
-4. `implementation-plan.md`
-5. `tasks.md`
+Reconciliation checks:
+1. No scope contradictions against the master plan baseline.
+2. No stack drift beyond Gate 1 approvals.
+3. No page-model mismatch across implementation, design, and journey docs.
+4. Any unresolved tradeoff is escalated to a human decision and documented.
 
-`tasks.md` may refine execution details, but must not contradict upstream intent.
+## G. Task Rules
+`tasks.md` is produced only after Gate 2 and should remain traceable to upstream PRD decisions.
 
-## 5) Required vs Optional Sections by File
+| Field | What It Captures | Notes |
+|---|---|---|
+| `task_ref` | Task reference id | Use Section H format |
+| `source_refs` | Upstream references | Should include relevant MP/IP/DG/UJ refs |
+| `problem` | Why this task exists | Keep concise and concrete |
+| `goal` | Expected outcome | Actionable target |
+| `stacks_used` | Stacks this task uses | Must align with Gate 1 baseline or Gate 1 re-open decision |
+| `test_plan` | How to validate | Static/e2e/integration as applicable |
+| `smoke_example` | Fast scenario check | Given/When/Then or command+expected |
+| `acceptance_criteria` | Done conditions | Measurable and testable |
+| `evidence` | Completion proof | Required when status is done |
 
-### 5.1 `master-plan.md`
-Allowed sections: up to 5 total.
+Tasks should not introduce unapproved scope or unapproved stack changes. If a task requires a new stack, it must reference a Gate 1 re-open decision.
 
-1. **Vision and Problem** (`Required`)
-2. **Scope and Non-goals** (`Required`)
-3. **Success Metrics (KPIs)** (`Required`)
-4. **Milestones and Roadmap** (`Optional`)
-- Include when delivery spans multiple phases/releases.
-5. **Risks and Key Decisions** (`Optional`)
-- Include when uncertainty, major tradeoffs, or dependencies exist.
+## H. Reference Format
+References use `Doc+Section+Number` so reviewers can jump directly to a sectioned requirement statement. The format is `<DOC>-<SectionLetter><ListNumber>`, for example `MP-B3` means `master-plan.md`, section `B`, list item `3`.
 
-### 5.2 `implementation-plan.md`
-Allowed sections: up to 5 total.
-
-1. **Architecture Slices and Boundaries** (`Required`)
-2. **Delivery Sequence and Dependencies** (`Required`)
-3. **Verification Strategy** (`Required`)
-4. **Migration/Rollback Plan** (`Optional`)
-- Include when changing existing data flows, APIs, or production behavior.
-5. **Performance/Security Constraints** (`Optional`)
-- Include when explicit NFR targets or compliance risk exists.
-
-### 5.3 `design-guideline.md`
-Allowed sections: up to 5 total.
-
-1. **Design Principles and UX Tone** (`Required`)
-2. **Information Architecture and Navigation** (`Required`)
-3. **Component and Interaction Rules** (`Required`)
-4. **Accessibility Rules** (`Optional`)
-- Include by default for user-facing products; omit only for non-UI/internal-only tooling.
-5. **Content and Microcopy Rules** (`Optional`)
-- Include when text UX, onboarding, or form-heavy flows are meaningful.
-
-### 5.4 `user-journey.md`
-Allowed sections: up to 5 total.
-
-1. **Personas or Jobs-to-be-Done** (`Required`)
-2. **Primary Journeys (Happy Paths)** (`Required`)
-3. **Failure and Recovery Paths** (`Required`)
-4. **Trust/Friction Moments** (`Optional`)
-- Include when conversion, retention, or risk-sensitive flows matter.
-5. **Journey Metrics and Instrumentation Points** (`Optional`)
-- Include when analytics events are in scope.
-
-### 5.5 `tasks.md`
-No section count limit. Each task must follow the task card schema below.
-
-Presentation rules:
-- Use checklists, bullets, or markdown tables for backlog/index/summary views.
-- Do not use embedded diagrams as the primary representation; links to diagrams are allowed.
-
-## 6) `tasks.md` Task Card Schema (Required)
-Every task entry must include:
-- `task_id` (`TS-###`) + task name
-- status (`todo`, `in_progress`, `blocked`, `done`)
-- description (problem/context)
-- goal (expected outcome)
-- `source_links` (at least one upstream Doc+ID from `MP`, `UJ`, `DG`, `IP`)
-- test plan (static, e2e, integration as applicable)
-- smoke examples (`Given/When/Then` or command + expected result)
-- acceptance criteria (checklist, measurable)
-- source references (doc links and/or external links)
-
-Recommended fields:
-- owner
-- estimate (S/M/L or points)
-- dependencies/blockers
-- evidence links (PR, screenshots, test logs)
-- `test_links` (task-scoped test IDs such as `TS-012.T1`)
-- `playbook_links` (entries in `docs/testing/failure-playbook.md` when promoted)
-
-### Task Card Template
 ```md
-## TS-###: <Task Name>
-
-- task_id: TS-###
-- status: todo|in_progress|blocked|done
-- owner: <name> (optional)
-- estimate: S|M|L (optional)
-- source_links: MP-###, UJ-###, DG-### (optional), IP-### (optional)
-- test_links: TS-###.T1 (optional)
-
-### Description
-<Context and current problem>
-
-### Goal
-<Outcome this task must produce>
-
-### Implementation Notes
-<Main files/components touched> (optional)
-
-### Dependencies / Blockers
-<Upstream task, env, decision> (optional)
-
-### Test Plan
-- Static: <command or N/A>
-- E2E: <spec or flow>
-- Integration: <contract checks or N/A>
-
-### Smoke Examples
-1. Given ...
-2. When ...
-3. Then ...
-
-### Acceptance Criteria
-- [ ] ...
-- [ ] ...
-
-### Source References
-- <doc section link>
-- <external reference link>
-
-### Evidence
-- <concise PR / run log / screenshot summary> (optional during draft, required at done)
-- <playbook link when promotion criteria are met>
+MP-B3
+IP-E2
+DG-E1
+UJ-F4
+TS-G5
 ```
 
-## 7) Human Cognitive Rules
-1. Put a `Quick Read` block at top of each of the first 4 docs:
-- objective
-- target user
-- in-scope
-- out-of-scope
-- current status
-- links to related docs
-2. Keep each section scannable in under 30 seconds.
-3. Prefer the clearest scannable format (tables, bullets, concise prose); use diagrams mainly in the first 4 docs.
-4. Use explicit numbers and thresholds instead of vague adjectives.
-5. Keep decision history small and visible.
+## I. Sub-Agent Operating Model [Optional]
+1. Architect lane drafts constraints and stack implications.
+2. Design lane drafts page-level UI behavior and layouts.
+3. Journey lane drafts transitions, failures, and recovery flow.
+4. Reconciliation lane checks cross-doc consistency before tasks.
+5. One author can perform all lanes if output quality is equivalent.
 
-## 8) AI-Optimization Rules
-1. Use deterministic headings exactly as defined in this file.
-2. Keep each requirement atomic and testable.
-3. Avoid ambiguous pronouns in critical requirements.
-4. Add explicit pass/fail conditions whenever possible.
-5. Use stable Doc+IDs and cross-links for retrieval and traceability.
-6. Keep each task independently executable without hidden context.
-7. When visuals are used (first 4 docs), include concise text equivalents directly below.
-8. In `tasks.md`, prefer machine-parseable checklists/bullets/tables; avoid embedded diagrams but include links when useful.
+## J. Authoring Style
+Use short paragraphs for context and intent, then use lists or tables for requirements and contracts. Keep statements concrete and scannable. Avoid overusing numbered lists where a short paragraph or table communicates better.
 
-## 9) Quality Checklist Before Merge
-- All 5 docs exist and follow section limits/rules.
-- Optional sections are included only when trigger conditions apply.
-- Every `TS-###` links to at least one upstream `source_links` entry.
-- Every acceptance criterion is measurable.
-- No contradictory statements remain across docs.
-- Structured notes use a clear, scannable format chosen by clarity.
-- Visual elements (first 4 docs only) include short text summaries for AI parsing.
-- Any detected conflict during drafting was resolved or escalated to the user.
-- No legacy type-prefixed IDs remain in active policy/docs.
-- For repeated/high-risk stuck cases, a playbook entry exists in `docs/testing/failure-playbook.md` and is linked from task evidence.
+Style notes:
+1. Use numbered lists for stable reference points.
+2. Use tables for field contracts and document mapping.
+3. Use diagrams for lifecycle and gate logic.
+4. Keep one requirement per line item where possible.
+
+## K. Quality Checklist
+1. Sequence followed (`master-plan` -> Gate 1 -> downstream docs -> Gate 2 -> `tasks.md`).
+2. Gate 1 status and stack freeze state are explicit.
+3. Any late stack addition has Gate 1 re-open evidence.
+4. Downstream docs align with master-plan baseline.
+5. Every task includes `stacks_used`.
+6. Acceptance criteria are measurable.
+7. No unresolved contradictions remain.
+8. References follow `Doc+Section+Number`.
+
+## L. Minimal Templates [Optional]
+Gate markers:
+
+```md
+gate_1_status: pending | approved | reopened
+gate_1_approver: <name/role>
+gate_1_date: <YYYY-MM-DD>
+gate_2_status: pending | approved
+gate_2_approver: <name/role>
+gate_2_date: <YYYY-MM-DD>
+```
+
+Task snippet:
+
+```md
+task_ref: TS-G3
+source_refs: MP-C5, IP-E1, DG-E2, UJ-E3
+problem: ...
+goal: ...
+stacks_used: Next.js App Router, Drizzle ORM, Clerk
+acceptance_criteria: ...
+```
+
+## M. Transition Policy
+This policy applies to new PRD cycles and major rewrites. Existing PRDs can migrate incrementally. During migration, declare current section mapping and gate status before continuing work.
