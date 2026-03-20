@@ -4,29 +4,36 @@
 This rulebook defines how PRD files are written, reviewed, and linked through a design-first workflow.
 
 PRD files:
-- Core files:
-  - `master-plan.md`
-  - `implementation-plan.md`
-  - `design-guideline.md`
-  - `user-journey.md`
-  - `tasks.md`
+- `master-plan.md`: catalog baseline for scope, stacks, page model, and high-level design intent
+- `implementation-plan.md`: technical execution within frozen stacks
+- `design-guideline.md`: page-level UI behavior and structure
+- `user-journey.md`: user movement and system response across pages
+- `tasks.md`: execution-ready tasks with traceability to upstream PRD decisions
+
+## B. Workflow and Structure Views
+This section gives one integrated process map.
 
 ```mermaid
-flowchart LR
-  A["Step 1: Master Plan Baseline"] --> G1["Gate 1: Human Approval + Stack Freeze"]
-  G1 --> B["Step 2: Downstream PRDs (IP / DG / UJ)"]
-  B --> G2["Gate 2: Reconciliation"]
-  G2 --> C["Step 3: tasks.md Generation"]
+flowchart TB
+  START["Start PRD Cycle"]
+  START --> MP["Generate master-plan.md"]
+  MP --> G1{"Gate 1<br/>Baseline + Stacks<br/>Locked?"}
+  G1 -->|No| MP_R["Revise master-plan.md"] --> G1
+  G1 -->|Yes| DS["Generate Downstream PRD Docs"]
+  DS --> IP["Generate implementation-plan.md"]
+  DS --> DG["Generate design-guideline.md"]
+  DS --> UJ["Generate user-journey.md"]
+  IP --> READY["Downstream Doc Set Ready"]
+  DG --> READY
+  UJ --> READY
+  READY --> L{"Late Stack<br/>Addition Found?"}
+  L -->|Yes| G1R["Re-open Gate 1 (Human Review)"] --> G1
+  L -->|No| G2{"Gate 2<br/>Cross-doc Check<br/>Passed?"}
+  G2 -->|No| R2["Resolve Contradictions + Update Downstream Docs"] --> DS
+  G2 -->|Yes| TS["Generate tasks.md"]
+  TS --> END["Ready for Task Execution"]
 ```
-Lifecycle summary: write master plan first, freeze baseline at Gate 1, draft downstream docs, reconcile at Gate 2, then generate tasks.
-
-## B. Sequence Reference (Text Fallback)
-Use this fallback sequence when a textual checklist is preferred:
-1. Master plan baseline.
-2. Gate 1 human approval and stack freeze.
-3. Downstream drafting (`implementation-plan.md`, `design-guideline.md`, `user-journey.md`).
-4. Gate 2 reconciliation.
-5. `tasks.md` generation.
+The workflow starts by generating `master-plan.md`, then runs Gate 1 to approve baseline scope and freeze stacks. After Gate 1 approval, the three downstream PRD files are generated in parallel and reconciled at Gate 2. `tasks.md` is generated only after Gate 2 passes, while late stack additions force a Gate 1 reopen before reconciliation can continue.
 
 ## C. Master Plan Baseline
 `master-plan.md` must be complete before Gate 1. It acts as the catalog baseline for scope, stacks, page model, and high-level design intent.
@@ -39,43 +46,37 @@ Recommended section titles for `master-plan.md`:
 5. Page Inventory and Relationships
 6. High-level Design Intent
 7. Risks, Decisions, and Stack Additions
-   - Each stack addition item should include:
-     - design driver
-     - proposed stack addition
-     - alternatives considered
-     - expected impact (`performance`, `security`, `operations`, `maintenance`)
-     - decision status (`approved`, `deferred`, `rejected`)
-     - rationale
+   Each stack addition item should include:
 
-## D. Gate Logic Diagram
-```mermaid
-flowchart TB
-  S0["Master Plan Baseline Ready"] --> G1{"Gate 1 Approved?"}
-  G1 -->|No| R1["Revise Master Plan"]
-  R1 --> G1
-  G1 -->|Yes| F["Stack Baseline Frozen"]
-  F --> W["Draft IP / DG / UJ"]
-  W --> G2{"Gate 2 Reconciled?"}
-  G2 -->|No| R2["Resolve Contradictions + Tradeoffs"]
-  R2 --> G2
-  G2 -->|Yes| T["Generate tasks.md"]
-  F --> L{"Late Stack Addition Needed?"}
-  L -->|Yes| O["Re-open Gate 1 (Human)"]
-  O --> F
-  L -->|No| W
-```
-Gate summary: after Gate 1, stack changes are frozen by default; late stack additions require explicit Gate 1 re-open.
+   | Field | Description |
+   |---|---|
+   | `design driver` | Reason the stack addition is being considered |
+   | `proposed stack addition` | Specific tool, service, or framework being added |
+   | `alternatives considered` | Reasonable alternatives reviewed before the proposal |
+   | `expected impact` | Expected effect on `performance`, `security`, `operations`, or `maintenance` |
+   | `decision status` | One of `approved`, `deferred`, or `rejected` |
+   | `rationale` | Explanation for the decision and expected tradeoff |
 
-## E. Downstream Document Contracts
+## D. Downstream Document Contracts
 Use clear section titles in downstream docs so authors and reviewers can scan quickly.
 
-| File | Suggested Section Titles | Focus |
-|---|---|---|
-| `implementation-plan.md` | Architecture Boundaries; API and Schema Direction; Integration and Verification | Technical execution within frozen stacks |
-| `design-guideline.md` | UI by Page Group; Component Purpose Map; Wireframe Layout Sketches; State Handling | Page-level UI behavior and structure |
-| `user-journey.md` | Cross-page Flows; Role Handoffs; Failure and Recovery Paths | User movement and system response across pages |
+### `implementation-plan.md`
+- Architecture Boundaries
+- API and Schema Direction
+- Integration and Verification
 
-## F. Reconciliation (Gate 2)
+### `design-guideline.md`
+- UI by Page Group
+- Component Purpose Map
+- Wireframe Layout Sketches
+- State Handling
+
+### `user-journey.md`
+- Cross-page Flows
+- Role Handoffs
+- Failure and Recovery Paths
+
+## E. Reconciliation (Gate 2)
 Gate 2 validates that implementation, design, and journey docs are consistent before task generation.
 
 Reconciliation checks:
@@ -84,12 +85,12 @@ Reconciliation checks:
 3. No page-model mismatch across implementation, design, and journey docs.
 4. Any unresolved tradeoff is escalated to a human decision and documented.
 
-## G. Task Rules
+## F. Task Rules
 `tasks.md` is produced only after Gate 2 and should remain traceable to upstream PRD decisions.
 
 | Field | What It Captures | Notes |
 |---|---|---|
-| `task_ref` | Task reference id | Use Section H format |
+| `task_ref` | Task reference id | Use Section G format |
 | `source_refs` | Upstream references | Should include relevant MP/IP/DG/UJ refs |
 | `problem` | Why this task exists | Keep concise and concrete |
 | `goal` | Expected outcome | Actionable target |
@@ -101,44 +102,69 @@ Reconciliation checks:
 
 Tasks should not introduce unapproved scope or unapproved stack changes. If a task requires a new stack, it must reference a Gate 1 re-open decision.
 
-## H. Reference Format
+## G. Reference Format
 References use `Doc+Section+Number` so reviewers can jump directly to a sectioned requirement statement. The format is `<DOC>-<SectionLetter><ListNumber>`, for example `MP-B3` means `master-plan.md`, section `B`, list item `3`.
 
 ```md
 MP-B3
-IP-E2
-DG-E1
-UJ-F4
-TS-G5
+IP-D2
+DG-D1
+UJ-E4
+TS-F5
 ```
 
-## I. Sub-Agent Operating Model [Optional]
+## I. Authoring Style
+Document structure:
+- Start with a short paragraph that states what the document is and what it is for.
+- Add a graph or diagram that shows the overall relation and flow.
+- Surround each graph with transition paragraphs: add a short lead-in sentence above it unless the section title already introduces it, then add follow-up text below it for deeper explanation.
+- Core sections should follow the same order as the graph, covering each main node section by section.
+- Put additional information such as appendices, reference snippets, checklists, templates, or supporting notes in the last several sections of the document.
+
+Preferred formats:
+- Use short paragraphs for context and intent.
+- Use lists for concise requirements and use tables for field contracts and document mapping.
+- Use Mermaid diagrams for workflow, system structure, or data logic when a diagram would improve clarity.
+- Use anatomy when the purpose is to illustrate file structure. For a simple file list, a short paragraph, list, or table is acceptable.
+
+Mermaid:
+- Prefer vertical flow (`flowchart TB`) for long or dense labels.
+- Use compact gate labels for readability. When breaking a gate label across lines, aim for a diamond shape such as `1:2`, `2:1`, or `1:3:1` (short/long or short/medium/short) instead of one long flat line.
+
+Style requirements:
+- Use numbered lists for stable reference points that are intended to be cited or referenced later.
+- Keep statements concrete and scannable.
+- Avoid overusing numbered lists where a short paragraph or table communicates better.
+- Avoid content or topic redundancy.
+- Keep one requirement per line where possible. Merge only when the requirements are materially the same, partly redundant, or one instruction clearly applies to multiple named conditions.
+
+## J. Quality Checklist
+
+- [ ] Core files are defined and each file purpose is explicit.
+- [ ] The workflow diagram reflects PRD generation order, gate timing, and rework paths.
+- [ ] Gate 1 status and stack freeze state are explicit.
+- [ ] Any late stack addition has Gate 1 re-open evidence.
+- [ ] `master-plan.md` follows the baseline structure and each stack addition uses the required fields.
+- [ ] Downstream documents use clear section titles that follow their contracts and align with the master-plan baseline.
+- [ ] Gate 2 reconciliation checks are satisfied before `tasks.md` is generated.
+- [ ] No unresolved contradictions or undocumented tradeoffs remain.
+- [ ] Each task includes required traceability and validation fields, including `source_refs`, `stacks_used`, `test_plan`, `smoke_example`, `acceptance_criteria`, and `evidence` when done.
+- [ ] Smoke tests are defined where applicable and align with task behavior and acceptance criteria.
+- [ ] References follow `Doc+Section+Number`.
+- [ ] Authoring style follows Section I.
+- [ ] Transition policy or current section mapping and gate status are declared during PRD migration.
+
+## L. Transition Policy
+This policy applies to new PRD cycles and major rewrites. Existing PRDs can migrate incrementally. During migration, declare current section mapping and gate status before continuing work.
+
+## H. Sub-Agent Operating Model [Optional]
 1. Architect lane drafts constraints and stack implications.
 2. Design lane drafts page-level UI behavior and layouts.
 3. Journey lane drafts transitions, failures, and recovery flow.
 4. Reconciliation lane checks cross-doc consistency before tasks.
 5. One author can perform all lanes if output quality is equivalent.
 
-## J. Authoring Style
-Use short paragraphs for context and intent, then use lists or tables for requirements and contracts. Keep statements concrete and scannable. Avoid overusing numbered lists where a short paragraph or table communicates better.
-
-Style notes:
-1. Use numbered lists for stable reference points.
-2. Use tables for field contracts and document mapping.
-3. Use diagrams for lifecycle and gate logic.
-4. Keep one requirement per line item where possible.
-
-## K. Quality Checklist
-1. Sequence followed (`master-plan` -> Gate 1 -> downstream docs -> Gate 2 -> `tasks.md`).
-2. Gate 1 status and stack freeze state are explicit.
-3. Any late stack addition has Gate 1 re-open evidence.
-4. Downstream docs align with master-plan baseline.
-5. Every task includes `stacks_used`.
-6. Acceptance criteria are measurable.
-7. No unresolved contradictions remain.
-8. References follow `Doc+Section+Number`.
-
-## L. Minimal Templates [Optional]
+## K. Minimal Templates [Optional]
 Gate markers:
 
 ```md
@@ -153,13 +179,10 @@ gate_2_date: <YYYY-MM-DD>
 Task snippet:
 
 ```md
-task_ref: TS-G3
-source_refs: MP-C5, IP-E1, DG-E2, UJ-E3
+task_ref: TS-F3
+source_refs: MP-C5, IP-D1, DG-D2, UJ-E3
 problem: ...
 goal: ...
 stacks_used: Next.js App Router, Drizzle ORM, Clerk
 acceptance_criteria: ...
 ```
-
-## M. Transition Policy
-This policy applies to new PRD cycles and major rewrites. Existing PRDs can migrate incrementally. During migration, declare current section mapping and gate status before continuing work.
