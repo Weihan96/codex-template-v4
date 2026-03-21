@@ -10,10 +10,10 @@ PRD files:
 - `user-journey.md`: user movement and system response across pages
 - `tasks.md`: execution-ready tasks with traceability to upstream PRD decisions
 
-## B. Workflow and Structure Views
+## B. Workflow Overview
 This section gives one integrated process map.
 
-**PRD workflow overview**[^PR-B1]
+**PRD workflow overview**
 
 ```mermaid
 flowchart TB
@@ -54,7 +54,7 @@ These sections define the minimum Gate 1 baseline and must appear in `master-pla
 ### Stack Addition Record Fields
 Use this field contract for each stack addition item recorded in the `Risks, Decisions, and Stack Additions` section.
 
-**Stack addition record fields**[^PR-C8]
+**Stack addition record fields**
 
 | Field | Description |
 |---|---|
@@ -107,7 +107,7 @@ Reconciliation checks:
 ## G. Task Rules
 `tasks.md` is produced only after Gate 2 and should remain traceable to upstream PRD decisions.
 
-**Task field contract**[^PR-G1]
+**Task field contract**
 
 | Field | What It Captures | Notes |
 |---|---|---|
@@ -135,29 +135,25 @@ Document structure:
 
 Preferred formats:
 1. Use short paragraphs for context and intent.
-2. Use lists for concise requirements and use tables for field contracts and document mapping.
-3. Use Mermaid diagrams for workflow, system structure, or data logic when a diagram would improve clarity.
-4. Use anatomy when the purpose is to illustrate file structure.
-5. For a simple file list, a short paragraph, list, or table is acceptable.
+2. Use lists for concise requirements.
+3. Use tables for field contracts and other structured reference material such as CLI usage.
+4. Use Mermaid diagrams for workflow, system structure, or data logic when a diagram would improve clarity.
+5. Use anatomy when the purpose is to illustrate file structure.
+6. For a simple file list, a short paragraph, list, or table is acceptable.
 
 Mermaid:
 1. Prefer vertical flow (`flowchart TB`) for long or dense labels.
 2. Keep gate labels compact and balanced across lines.
 
 Style requirements:
-1. Use numbered lists by default for stable reference points that are intended to be cited or referenced later.
-2. Keep statements concrete and scannable.
-3. Avoid overusing numbered lists where a short paragraph or table communicates better.
-4. Avoid content or topic redundancy.
-5. Keep one requirement per line by default.
-6. Grouped prose is allowed only when the bundled items are materially the same or enforced, reviewed, or verified together under one instruction or one check.
-
-> [!NOTE]
-> These authoring style rules govern the five PRD files listed in Section A.
-> When `PRD-rules.md` is edited, review it against these style rules as a self-check, allowing only the minimal meta-spec exceptions needed to explain the reference model itself.
+1. Keep statements concrete and scannable.
+2. Avoid overusing lists where a short paragraph or table communicates better.
+3. Avoid content or topic redundancy.
+4. Keep one requirement per line by default.
+5. Grouped prose is allowed when the bundled items are the same kind of requirement.
 
 ## I. Reference Format
-References are required only for statements that are intended to be cited across PRD files.
+References are required only for statements in the five PRD files listed in Section A that are intended to be cited across PRD files. `PRD-rules.md` does not need reusable reference ids unless a future workflow explicitly requires them.
 
 Reference format:
 1. Use `<DOC>-<SectionLetter><Number>` for each reference id, for example `MP-B3`.
@@ -191,25 +187,24 @@ Example table cell footnote pattern:
 | `decision status`[^MP-C3.a] | One of `approved`, `deferred`, or `rejected` |
 ```
 
-## J. Quality Checklist
-
-- [ ] Core files are defined and each file purpose is explicit.
-- [ ] The workflow diagram reflects PRD generation order, gate timing, and rework paths.
-- [ ] Gate 1 status and stack freeze state are explicit.
-- [ ] Any late stack addition has Gate 1 re-open evidence.
-- [ ] `master-plan.md` follows the required core sections in Section C.
-- [ ] Each stack addition record uses the required fields in Section C.
-- [ ] Downstream documents use clear section titles that follow their contracts and align with the master-plan baseline.
-- [ ] Gate 2 reconciliation checks are satisfied before `tasks.md` is generated.
-- [ ] No unresolved contradictions or undocumented tradeoffs remain.
-- [ ] Each task includes required traceability and validation fields, including `source_refs`, `stacks_used`, `test_plan`, `smoke_example`, `acceptance_criteria`, and `evidence` when done.
-- [ ] Smoke tests are defined where applicable and align with task behavior and acceptance criteria.
-- [ ] References follow Section I, including titled non-list items and table-cell footnotes when used.
-- [ ] Authoring style follows Section H, including the grouped-prose exception.
-- [ ] Transition policy or current section mapping and gate status are declared during PRD migration.
-
-## K. Transition Policy
+## J. Transition Policy
 This policy applies to new PRD cycles and major rewrites. Existing PRDs can migrate incrementally. During migration, declare current section mapping and gate status before continuing work.
+
+## K. Quality Checklist
+
+- [ ] Section A defines the PRD file set and makes each file purpose explicit.
+- [ ] Section B reflects PRD generation order, gate timing, and rework paths.
+- [ ] Section C defines a complete Gate 1 baseline for `master-plan.md`.
+- [ ] Section C stack addition records use the required field contract when applicable.
+- [ ] Section D records Gate 1 status, approver, date, and any required re-open.
+- [ ] Section E downstream docs use clear section titles and stay aligned with the master-plan baseline.
+- [ ] Section F reconciliation is complete before `tasks.md` generation continues.
+- [ ] Section F leaves no unresolved contradictions or undocumented tradeoffs.
+- [ ] Section G tasks include required traceability, validation, and evidence fields.
+- [ ] Section G smoke checks align with task behavior and acceptance criteria when applicable.
+- [ ] Section H authoring style is followed, including graph support text and section ordering.
+- [ ] Section I reference formatting is used wherever reusable PRD citations are required.
+- [ ] Section J migration notes declare current section mapping and gate status when applicable.
 
 ## L. Sub-Agent Operating Model [Optional]
 1. Architect lane drafts constraints and stack implications.
@@ -230,7 +225,7 @@ gate_2_approver: <name/role>
 gate_2_date: <YYYY-MM-DD>
 ```
 
-Task snippet:
+Task snippet (minimal complete):
 
 ```md
 task_ref: TS-F3
@@ -238,9 +233,8 @@ source_refs: MP-C5, IP-D1, DG-D2, UJ-E3
 problem: ...
 goal: ...
 stacks_used: Next.js App Router, Drizzle ORM, Clerk
+test_plan: verify:static, verify:e2e
+smoke_example: Given ..., when ..., then ...
 acceptance_criteria: ...
+evidence: <required when status is done>
 ```
-
-[^PR-B1]: PR-B1
-[^PR-C8]: PR-C8
-[^PR-G1]: PR-G1
